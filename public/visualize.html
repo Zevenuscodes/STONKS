@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Stock Span Visualization</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #000 0%, #18181b 60%, #27272a 100%);
+      color: #fff;
+      font-family: 'Fira Mono', monospace;
+      padding: 0;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 32px 16px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 4rem;
+      font-weight: 700;
+      color: #ff8800;
+      letter-spacing: 0.2em;
+      text-shadow: 0 2px 16px #ff880088;
+      margin: 2rem 0 1rem 0;
+    }
+    .chart-container {
+      background: rgba(39, 39, 42, 0.85);
+      border-radius: 1.5rem;
+      padding: 2rem;
+      box-shadow: 0 4px 32px 0 #ff880033;
+      border: 1px solid #232323;
+      margin-top: 2rem;
+    }
+    .back-btn {
+      margin-top: 2rem;
+      background: linear-gradient(90deg, #ff8800, #ffb347);
+      color: #18181b;
+      font-weight: 700;
+      font-size: 1.1rem;
+      padding: 0.7em 2em;
+      border: none;
+      border-radius: 999px;
+      box-shadow: 0 2px 16px #ff880088;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .back-btn:hover {
+      background: linear-gradient(90deg, #ffb347, #ff8800);
+      transform: scale(1.05);
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Stock Span Bar Graph</h1>
+    <div id="data-table-container"></div>
+    <div class="chart-container">
+      <canvas id="spanChart" width="800" height="400"></canvas>
+    </div>
+    <button class="back-btn" onclick="window.location.href='index.html'">&#8592; Back</button>
+  </div>
+  <script>
+    // Get data from localStorage
+    const prices = JSON.parse(localStorage.getItem('stockSpanPrices') || '[]');
+    const spans = JSON.parse(localStorage.getItem('stockSpanSpans') || '[]');
+    // Try to get the original table if available
+    let tableData = null;
+    try {
+      tableData = JSON.parse(localStorage.getItem('stockSpanTableData') || 'null');
+    } catch {}
+    // Render table if available
+    if (tableData && Array.isArray(tableData)) {
+      let html = '<div style="overflow-x:auto;"><table style="width:100%;margin-bottom:2rem;border-collapse:collapse;background:rgba(39,39,42,0.85);color:#fff;border-radius:1rem;overflow:hidden;box-shadow:0 4px 32px 0 #ff880033;">';
+      for (let i = 0; i < tableData.length; i++) {
+        html += '<tr>';
+        for (let j = 0; j < tableData[i].length; j++) {
+          html += `<td style="padding:0.5em 1em;border:1px solid #232323;">${tableData[i][j]}</td>`;
+        }
+        html += '</tr>';
+      }
+      html += '</table></div>';
+      document.getElementById('data-table-container').innerHTML = html;
+    } else if (prices.length > 0) {
+      // Fallback: show prices as a single row
+      let html = '<div style="overflow-x:auto;"><table style="width:100%;margin-bottom:2rem;border-collapse:collapse;background:rgba(39,39,42,0.85);color:#fff;border-radius:1rem;overflow:hidden;box-shadow:0 4px 32px 0 #ff880033;">';
+      html += '<tr>' + prices.map(p => `<td style="padding:0.5em 1em;border:1px solid #232323;">${p}</td>`).join('') + '</tr>';
+      html += '</table></div>';
+      document.getElementById('data-table-container').innerHTML = html;
+    }
+    // Prepare labels
+    const labels = prices.map((_, i) => `Day ${i + 1}`);
+    // Draw chart
+    const ctx = document.getElementById('spanChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Stock Span',
+          data: spans,
+          backgroundColor: '#ff8800cc',
+          borderColor: '#ff8800',
+          borderWidth: 2,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          title: {
+            display: true,
+            text: 'Stock Span for Each Day',
+            color: '#fff',
+            font: { size: 24 }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: '#fff', font: { size: 16 } },
+            grid: { color: '#444' }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: { color: '#fff', font: { size: 16 } },
+            grid: { color: '#444' }
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html> 

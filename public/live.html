@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Live Signals - Stock Span Visualizer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #000 0%, #18181b 60%, #27272a 100%);
+      color: #fff;
+      font-family: 'Fira Mono', monospace;
+      padding: 0;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 32px 16px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      color: #ff8800;
+      letter-spacing: 0.2em;
+      text-shadow: 0 2px 16px #ff880088;
+      margin: 2rem 0 1rem 0;
+    }
+    .desc {
+      color: #bdbdbd;
+      font-size: 1.3rem;
+      margin-bottom: 2rem;
+    }
+    .live-box {
+      background: rgba(39, 39, 42, 0.85);
+      border-radius: 1.5rem;
+      padding: 2rem;
+      box-shadow: 0 4px 32px 0 #ff880033;
+      border: 1px solid #232323;
+      margin-top: 2rem;
+      font-size: 2rem;
+      color: #00ff99;
+      font-weight: bold;
+      letter-spacing: 0.1em;
+      overflow-x: auto;
+    }
+    .live-box table, .live-box th, .live-box td {
+      font-size: 0.95rem;
+    }
+    .back-btn {
+      margin-top: 2rem;
+      background: linear-gradient(90deg, #ff8800, #ffb347);
+      color: #18181b;
+      font-weight: 700;
+      font-size: 1.1rem;
+      padding: 0.7em 2em;
+      border: none;
+      border-radius: 999px;
+      box-shadow: 0 2px 16px #ff880088;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .back-btn:hover {
+      background: linear-gradient(90deg, #ffb347, #ff8800);
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Live Signals</h1>
+    <div class="desc">Live stock prices and span for Sensex and Nifty 50 companies.</div>
+    <div style="margin-bottom:2rem;">
+      <button id="tab-sensex" class="tab-btn active">Sensex</button>
+      <button id="tab-nifty" class="tab-btn">Nifty 50</button>
+    </div>
+    <div id="live-table-container" class="live-box" style="padding:0;"></div>
+    <button class="back-btn" onclick="window.location.href='index.html'">&#8592; Back</button>
+  </div>
+  <script>
+    // --- Stock Span Calculation ---
+    function calculateSpan(prices) {
+      const span = [];
+      const stack = [];
+      for (let i = 0; i < prices.length; i++) {
+        while (stack.length !== 0 && prices[stack[stack.length - 1]] <= prices[i]) {
+          stack.pop();
+        }
+        span[i] = stack.length === 0 ? i + 1 : i - stack[stack.length - 1];
+        stack.push(i);
+      }
+      return span;
+    }
+
+    // --- Company Lists (demo, can be expanded) ---
+    const SENSEX = [
+      { name: 'Reliance', ticker: 'RELIANCE.NS' },
+      { name: 'TCS', ticker: 'TCS.NS' },
+      { name: 'Infosys', ticker: 'INFY.NS' },
+      { name: 'HDFC Bank', ticker: 'HDFCBANK.NS' },
+      { name: 'ICICI Bank', ticker: 'ICICIBANK.NS' },
+      { name: 'HUL', ticker: 'HINDUNILVR.NS' },
+      { name: 'Bharti Airtel', ticker: 'BHARTIARTL.NS' },
+      { name: 'SBI', ticker: 'SBIN.NS' },
+      { name: 'Bajaj Finance', ticker: 'BAJFINANCE.NS' },
+      { name: 'Axis Bank', ticker: 'AXISBANK.NS' }
+    ];
+    const NIFTY = [
+      { name: 'Adani Enterprises', ticker: 'ADANIENT.NS' },
+      { name: 'Asian Paints', ticker: 'ASIANPAINT.NS' },
+      { name: 'Bajaj Auto', ticker: 'BAJAJ-AUTO.NS' },
+      { name: 'Coal India', ticker: 'COALINDIA.NS' },
+      { name: "Divi's Labs", ticker: 'DIVISLAB.NS' },
+      { name: 'Eicher Motors', ticker: 'EICHERMOT.NS' },
+      { name: 'Grasim', ticker: 'GRASIM.NS' },
+      { name: 'HCL Tech', ticker: 'HCLTECH.NS' },
+      { name: 'Hero MotoCorp', ticker: 'HEROMOTOCO.NS' },
+      { name: 'JSW Steel', ticker: 'JSWSTEEL.NS' }
+    ];
+
+    // --- UI ---
+    const tabSensex = document.getElementById('tab-sensex');
+    const tabNifty = document.getElementById('tab-nifty');
+    const tableContainer = document.getElementById('live-table-container');
+    function setActiveTab(tab) {
+      tabSensex.classList.remove('active');
+      tabNifty.classList.remove('active');
+      tab.classList.add('active');
+    }
+    tabSensex.onclick = () => { setActiveTab(tabSensex); currentTab = 'sensex'; showTable('sensex'); };
+    tabNifty.onclick = () => { setActiveTab(tabNifty); currentTab = 'nifty'; showTable('nifty'); };
+
+    // Generate mock prices for demo
+    function generateMockPrices() {
+      const base = 100 + Math.random() * 100;
+      let prices = [base];
+      for (let i = 1; i < 7; i++) {
+        // Simulate daily change
+        prices.push(prices[i-1] + (Math.random() - 0.5) * 4);
+      }
+      return prices.map(p => Math.max(10, p));
+    }
+
+    function showTable(index) {
+      tableContainer.innerHTML = '<div style="padding:2em;">Loading...</div>';
+      const companies = index === 'sensex' ? SENSEX : NIFTY;
+      let html = '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;background:rgba(39,39,42,0.85);color:#fff;border-radius:1rem;overflow:hidden;box-shadow:0 4px 32px 0 #ff880033;">';
+      html += '<tr style="background:#18181b;"><th style="padding:0.7em 1em;">Company</th><th style="padding:0.7em 1em;">Ticker</th><th style="padding:0.7em 1em;">Latest Price</th><th style="padding:0.7em 1em;">Last 7 Days</th><th style="padding:0.7em 1em;">Latest Span</th></tr>';
+      for (const c of companies) {
+        const prices = generateMockPrices();
+        const latest = prices[prices.length - 1];
+        const span = calculateSpan(prices);
+        html += `<tr><td style="padding:0.5em 1em;">${c.name}</td><td style="padding:0.5em 1em;">${c.ticker}</td><td style="padding:0.5em 1em;">${latest.toFixed(2)}</td><td style="padding:0.5em 1em;">${prices.map(p => p.toFixed(2)).join(', ')}</td><td style="padding:0.5em 1em;">${span[span.length - 1]}</td></tr>`;
+      }
+      html += '</table></div>';
+      tableContainer.innerHTML = html;
+    }
+
+    // Update table every 5 seconds to simulate real-time
+    let currentTab = 'sensex';
+    function updateTable() { showTable(currentTab); }
+    setInterval(updateTable, 5000);
+
+    // --- Tab Button Styles ---
+    const style = document.createElement('style');
+    style.innerHTML = `.tab-btn {background: #232323; color: #ffb347; border: none; border-radius: 999px; font-size: 1.1rem; font-weight: 700; padding: 0.5em 1.5em; margin: 0 0.5em; cursor: pointer; transition: background 0.2s, color 0.2s;} .tab-btn.active, .tab-btn:hover {background: linear-gradient(90deg, #ff8800, #ffb347); color: #18181b;}`;
+    document.head.appendChild(style);
+
+    // --- Init ---
+    setActiveTab(tabSensex);
+    showTable('sensex');
+  </script>
+</body>
+</html> 
