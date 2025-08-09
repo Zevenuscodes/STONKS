@@ -19,8 +19,8 @@
 
 - **Live:** https://stonks.vercel.app/
 - **Screenshots / GIFs:**  
-  - `public/preview-1.png` 
-  - `public/preview-2.gif` — Step-by-step stack visualization
+  - <img width="1908" height="861" alt="image" src="https://github.com/user-attachments/assets/7367888b-792d-4f38-ba3e-a49dd9f82376" />
+
 
 
 ---
